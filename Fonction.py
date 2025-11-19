@@ -3115,7 +3115,7 @@ def display_confusion_from_crosstab(
             "data": x_labels,
             "splitArea": {"show": True},
             "axisLabel": {
-                "rotate": 10,
+                "rotate": 15,
                 "fontSize": 12,
                 "margin": x_label_margin
             },

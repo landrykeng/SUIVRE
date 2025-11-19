@@ -461,14 +461,15 @@ with tab_[1]:
         )
     
         #create_pie_chart_from_df(data_facture,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="sjfhbjhc")
-    
+    district=st.multiselect("Sélectionnez le(s) district(s)", options=rejet_to_use["NOM DISTRICT"].unique(), default=rejet_to_use["NOM DISTRICT"].unique())
+    rejet_district_choosed=rejet_to_use[rejet_to_use["NOM DISTRICT"].isin(district)] if len(district)!=0 else rejet_to_use
     #df_coherence=pd.pivot_table(rejet_to_use, index="Statut initial chèque", columns="statut du chèque", aggfunc='size', fill_value=0)
-    df_coherence=pd.crosstab(rejet_to_use["Statut initial chèque"], rejet_to_use["statut du chèque"])
+    df_coherence=pd.crosstab(rejet_district_choosed["Statut initial chèque"], rejet_district_choosed["statut du chèque"])
     df_coherence["Total"]=df_coherence.sum(axis=1)
     col_1=st.columns([1,2])
     with col_1[0]:
-        create_pie_chart_from_df(data_rejet,column="Statut initial chèque", title="Statut initial des chèques", height="200px")
-        create_pie_chart_from_df(data_rejet,column="statut du chèque", title="Statut audité des chèques", height="200px", cle="khl")
+        create_pie_chart_from_df(rejet_district_choosed,column="Statut initial chèque", title="Statut initial des chèques", height="200px")
+        create_pie_chart_from_df(rejet_district_choosed,column="statut du chèque", title="Statut audité des chèques", height="200px", cle="khl")
         
         #create_bar_chart_from_contingency(df_coherence, var1_name="Statut initial chèque", title="Coherence entre statut initial et statut final du chèque", cle="jhbkl")
         
