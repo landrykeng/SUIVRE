@@ -359,7 +359,7 @@ with st.sidebar:
                         width: 200px; height: 80px; margin: 0 auto; border-radius: 15px;
                         display: flex; align-items: center; justify-content: center;
                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);'>
-                <span style='font-size: 40px;'>CHEQUE SANTE</span>
+                <span style='font-size: 30px;'>CHEQUE SANTE</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -401,7 +401,7 @@ initial_to_use=data_initial[data_initial['Statut FOSA'].isin(fosa)] if len(fosa)
 initial_to_use=initial_to_use[initial_to_use['Mois'].isin(mois)] if len(mois)!=0 else initial_to_use
 
 # Titre principal
-st.markdown("# 📊 Tableau de bord de l'enquête- FOSA 2025")
+st.markdown("# 📊 Tableau de bord de l'enquête- CHEQUE SANTE 2025")
 
 #afficher_toutes_les_10_secondes()
 
