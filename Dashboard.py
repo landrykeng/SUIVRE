@@ -674,6 +674,8 @@ with tab_[0]:
 
 #==============ONGLET FORFAITAIRES ===================
 with tab_[1]:
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     cf1=st.columns(2)
     with cf1[0]:
         fosa3=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"],key="fosa3")
@@ -775,7 +777,15 @@ with tab_[1]:
                 "taux_global_NV": round(taux_NV, 2) if not pd.isna(taux_NV) else np.nan,
             })
 
-        df_taux_par_district = pd.DataFrame(rows).sort_values("District").reset_index(drop=True)
+        if rows:
+            df_taux_par_district = pd.DataFrame(rows).sort_values("District").reset_index(drop=True)
+        else:
+            df_taux_par_district = pd.DataFrame([{
+            "District": "Aucune donnée",
+            "taux_global_rejet": 0.0,
+            "taux_global_V": 0.0,
+            "taux_global_NV": 0.0
+            }])
         st.caption("Taux de rejet, Taux rejet factures valides et Taux réhabilitation facture non validé (en %) — survolez les barres pour voir les valeurs.")
         # Préparer les données (remplacer les NaN par 0 pour l'affichage)
         df_plot = df_taux_par_district.copy().fillna(0)
