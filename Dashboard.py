@@ -467,15 +467,15 @@ with tab_[1]:
     df_coherence["Total"]=df_coherence.sum(axis=1)
     col_1=st.columns([1,2])
     with col_1[0]:
-        st.dataframe(df_coherence)
+        create_pie_chart_from_df(data_rejet,column="Statut initial chèque", title="Statut initial des chèques", height="200px")
+        create_pie_chart_from_df(data_rejet,column="statut du chèque", title="Statut audité des chèques", height="200px", cle="khl")
         
         #create_bar_chart_from_contingency(df_coherence, var1_name="Statut initial chèque", title="Coherence entre statut initial et statut final du chèque", cle="jhbkl")
         
             
             
     with col_1[1]:
-        st.markdown("Graph2")
-        display_confusion_from_crosstab(df_coherence,y_title="Statut initial",x_title="Satut audité", keys="jkbcnksdnkjs",title="Satatut des chèques avant et après audition")
+        display_confusion_from_crosstab(df_coherence,y_title="Statut initial",x_title="Satut audité", keys="jkbcnksdnkjs",title="Satatut des chèques avant et après audition", height="450px")
     # Troisième ligne avec Top 5 clients et Revenus par commerciaux
     col1, col2 = st.columns(2)
 

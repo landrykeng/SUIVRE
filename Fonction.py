@@ -2230,7 +2230,7 @@ def create_pie_chart_from_df(df, column, style="donut", title="", colors=None,
             "show": show_legend,
             "type": "scroll",
             "orient": "horizontal",
-            "bottom": 10,
+            "bottom": 2,
             "left": "center",
             "data": labels
         },
