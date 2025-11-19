@@ -441,7 +441,7 @@ with tab_[1]:
     col_= st.columns(2)
 
     with col_[0]:
-        tab_cheq_district
+        
         create_bar_chart_from_contingency(tab_cheq_district, var1_name="NOM DISTRICT", title="Chèque à saisir vs Chèque saisi par district", height="400px" )
         #create_crossed_bar_chart(good_data,var1="Region",var2="Statut_cheque",title="Répartition des chèques par région",height="350px" ) 
 
@@ -452,7 +452,7 @@ with tab_[1]:
         n = len(taux_realisation_district)
         palette = px.colors.qualitative.Plotly  # palette de base
         colors = [palette[i % len(palette)] for i in range(n)]
-        taux_realisation_district
+        
         make_multi_progress_bar_echart( labels=taux_realisation_district.index, values=taux_realisation_district["Taux de réalisation"],
             titre="Taux de réalisation par district",
             colors=colors,
