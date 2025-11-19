@@ -3093,7 +3093,7 @@ def display_confusion_from_crosstab(
     margin_left = "1%"
     margin_right = "20%"
     margin_top = "10%"
-    margin_bottom = "20%"
+    margin_bottom = "30%"
     x_label_margin = 8
     y_label_margin = 8
 
