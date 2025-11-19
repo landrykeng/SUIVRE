@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import numpy as np
 from Authentification import *
 from Fonction import *
+from streamlit_echarts import st_echarts
 
 # Configuration de la page
 st.set_page_config(
@@ -420,6 +421,8 @@ with tab_[0]:
     st.dataframe(data_rejet)
     st.write("### Données de synthèse")
     st.dataframe(data_synthese)
+    valide=data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+    recu=data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()
     st.write("### Données initiales")
     st.dataframe(data_initial)
 #==============ONGLET GENERAL===================
@@ -431,14 +434,12 @@ with tab_[1]:
     fosa_edited=len(initial_to_use["FOSA"].unique())
     
     with kpi_col[0]:
-        
         display_single_metric_advanced("Nombre FOSA à auditer",nb_fosa_to_audit, delta=0, color_scheme="green")
         
     with kpi_col[1]:
-        
         display_single_metric_advanced("Nombre de FOSA audité",fosa_edited, delta=0,color_scheme="red")
 
-    with kpi_col[2]: #
+    with kpi_col[2]: 
         display_single_metric_advanced("Taux de réalisation",round(100*fosa_edited/nb_fosa_to_audit,2), delta=0,color_scheme="orange", unit="%")
 
     st.write("")
@@ -458,7 +459,7 @@ with tab_[1]:
 
     with col_[0]:
         pass
-        create_bar_chart_from_contingency(tab_fosa_district, var1_name="District", title="Chèque à saisir vs Chèque saisi par district", height="400px" )
+        create_bar_chart_from_contingency(tab_fosa_district, var1_name="District", title="FOSA à auditer vs FOSA audité par district", height="400px" )
         #create_crossed_bar_chart(good_data,var1="Region",var2="Statut_cheque",title="Répartition des chèques par région",height="350px" ) 
 
     with col_[1]:
@@ -505,16 +506,153 @@ with tab_[1]:
     with col_1[1]:
         display_confusion_from_crosstab(df_coherence,y_title="Statut initial",x_title="Satut audité", keys="jkbcnksdnkjs",title="Satatut des chèques avant et après audition", height="450px")
     # Troisième ligne avec Top 5 clients et Revenus par commerciaux
-    col1, col2 = st.columns(2)
+    
+    kpi_col2=st.columns(3)
+    #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
+    nb_fosa_to_audit=echantillon.shape[0]
+    fosa_edited=len(initial_to_use["FOSA"].unique())
+    
+    with kpi_col2[0]:
+        taux_global_rejet=(round(100*rejet_to_use.shape[0]/synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum(),2))
+        display_single_metric_advanced("Taux global de rejet",taux_global_rejet, delta=0, color_scheme="green", unit="%")
+        
+    with kpi_col2[1]:
+        taux_global_V=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Validé selon MC"].shape[0])/synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum(),2))
+        display_single_metric_advanced("Taux global de validation",taux_global_V, delta=0,color_scheme="red", unit="%")
 
-    with col1:
-        pass
-        #display_confusion_matrix(good_data, var1="Statut_facture", var2="Statut_cheque",keys="SKJBDCBNKJFN")
+    with kpi_col2[2]: 
+        taux_global_NV=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum()-synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
+        display_single_metric_advanced("Taux global de non validation",taux_global_NV, delta=0,color_scheme="orange", unit="%")
 
-    with col2:
-        pass
-        #display_confusion_matrix(good_data, var1="Statut_facture", var2="Statut_cheque", value="Montant_mensuel",color_scheme="Oranges", keys="bdkjsndkjbk")
+    # Construction d'un dataframe par District avec les 3 taux demandés
+    districts = sorted(list(rejet_to_use["District"].dropna().unique()))
+    if "District" in synthese_to_use.columns:
+        synth_districts = list(synthese_to_use["District"].dropna().unique())
+        for d in synth_districts:
+            if d not in districts:
+                districts.append(d)
 
+    rows = []
+    for d in districts:
+        # numérateurs
+        rej_count = rejet_to_use[rejet_to_use["District"] == d].shape[0]
+        valid_count = rejet_to_use[(rejet_to_use["District"] == d) & (rejet_to_use["Statut initial chèque"] == "Validé selon MC")].shape[0]
+        non_valid_count = rejet_to_use[(rejet_to_use["District"] == d) & (rejet_to_use["Statut initial chèque"] == "Rejeté selon MC")].shape[0]
+
+        # dénominateurs (par district si disponible sinon total)
+        if "District" in synthese_to_use.columns:
+            total_recu = synthese_to_use[synthese_to_use["District"] == d]["NOMBRE TOTAL DE FACTURE RECU"].sum()
+            total_valide_mc = synthese_to_use[synthese_to_use["District"] == d]["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+        else:
+            total_recu = synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum()
+            total_valide_mc = synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+
+        denom_nv = total_recu - total_valide_mc
+
+        taux_rejet = (100 * rej_count / total_recu) if total_recu and total_recu > 0 else np.nan
+        taux_V = (100 * valid_count / total_valide_mc) if total_valide_mc and total_valide_mc > 0 else np.nan
+        taux_NV = (100 * non_valid_count / denom_nv) if denom_nv and denom_nv > 0 else np.nan
+
+        rows.append({
+            "District": d,
+            "taux_global_rejet": round(taux_rejet, 2) if not pd.isna(taux_rejet) else np.nan,
+            "taux_global_V": round(taux_V, 2) if not pd.isna(taux_V) else np.nan,
+            "taux_global_NV": round(taux_NV, 2) if not pd.isna(taux_NV) else np.nan,
+        })
+
+    df_taux_par_district = pd.DataFrame(rows).sort_values("District").reset_index(drop=True)
+    st.caption("Taux de rejet, taux validé et taux non validé par district (en %) — survolez les barres pour voir les valeurs.")
+    col_tx=st.columns([3,1])
+     
+    with col_tx[0]:
+        # Préparer les données (remplacer les NaN par 0 pour l'affichage)
+        df_plot = df_taux_par_district.copy().fillna(0)
+        labels = df_plot["District"].astype(str).tolist()
+        rej = df_plot["taux_global_rejet"].tolist()
+        val = df_plot["taux_global_V"].tolist()
+        nonval = df_plot["taux_global_NV"].tolist()
+
+
+        options = {
+            "backgroundColor": "transparent",
+            "tooltip": {
+                "trigger": "axis",
+                "axisPointer": {"type": "shadow"},
+                "formatter": "{b0}<br/>{a0}: {c0}%<br/>{a1}: {c1}%<br/>{a2}: {c2}%"
+            },
+            "legend": {
+                "data": ["Taux rejet", "Taux validé", "Taux non validé"],
+                "top": "6%",
+                "textStyle": {"color": "#2c3e50"}
+            },
+            "grid": {"left": "6%", "right": "4%", "bottom": "8%", "containLabel": True},
+            "xAxis": [
+                {
+                    "type": "category",
+                    "data": labels,
+                    "axisTick": {"alignWithLabel": True},
+                    "axisLabel": {"rotate": 30, "interval": 0, "color": "#34495e"},
+                    "axisLine": {"lineStyle": {"color": "#ecf0f1"}}
+                }
+            ],
+            "yAxis": [
+                {
+                    "type": "value",
+                    "name": "%",
+                    "min": 0,
+                    "max": np.max([np.max(rej), np.max(val), np.max(nonval)])+5,
+                    "axisLabel": {"formatter": "{value} %", "color": "#34495e"},
+                    "splitLine": {"lineStyle": {"type": "dashed", "color": "#ecf0f1"}}
+                }
+            ],
+            "color": [
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#f73c42"}, {"offset": 1, "color": "#fad0c4"}]},
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#5512f1"}, {"offset": 1, "color": "#fbc2eb"}]},
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#16dbe9"}, {"offset": 1, "color": "#66a6ff"}]}
+            ],
+            "series": [
+                {
+                    "name": "Taux rejet",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": rej,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                },
+                {
+                    "name": "Taux validé",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": val,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                },
+                {
+                    "name": "Taux non validé",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": nonval,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                }
+            ],
+            "toolbox": {
+                "feature": {
+                    "saveAsImage": {"title": "Enregistrer"},
+                    "dataView": {"title": "Données", "readOnly": True}
+                },
+                "right": 10
+            }
+        }
+
+        st_echarts(options=options, height="520px", key="taux_par_district_chart")
+    
+    with col_tx[1]:
+        st.dataframe(df_taux_par_district)
+        st.write("")
 #==============ONGLET PERSONNEL==========================
 with tab_[2]:
     def main():
