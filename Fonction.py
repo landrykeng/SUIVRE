@@ -29,12 +29,6 @@ from My_Cspro_function import *
 from math import radians, cos, sin, asin, sqrt
 
 
-def afficher_toutes_les_10_secondes():
-    st.write("Heure actuelle :", time.strftime("%H:%M:%S"))
-
-    # Attendre 10 secondes puis relancer l'application
-    time.sleep(120)
-    st.rerun()
 
 @st.fragment
 def afficher_heure():
@@ -42,11 +36,6 @@ def afficher_heure():
     st.session_state.position=1
     st.rerun()
 
-
-import streamlit as st
-import pandas as pd
-
-position=1
 
 #Fonction de mise à jour des donnée
 def upgrade_data():
@@ -63,7 +52,7 @@ def upgrade_data():
             st.session_state.df_synthese=pd.read_excel("Data_collected.xlsx",sheet_name="Synthese")
             st.session_state.df_initial=pd.read_excel("Data_collected.xlsx",sheet_name="Initial")
             st.session_state.position=0
-            st.warning("Erreur lors la mise à jour du tableau de bord : prochaine tentative dans 5 minutes")
+            st.warning("Erreur lors la mise à jour du tableau de bord : vérifiez votre connexion internet")
 
 # Fonction pour calculer la distance entre deux points GPS
 
