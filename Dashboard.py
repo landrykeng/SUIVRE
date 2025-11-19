@@ -412,21 +412,487 @@ if update:
     upgrade_data()
     
 st.info("Si vous êtes sur PC, ajuster le zoom de votre navigateur à 80% pour une meilleure expérience visuelle. (ctrl + -)", icon="ℹ️")
-tab_=st.tabs(["**Données**","**Dashboard**", "**Personnel**"])
+tab_=st.tabs(["**Indicateurs**",
+              "**Prestations Forfaitaires**",
+              "**Prestations Plafonnées SONUB**",
+              "**Prestations Plafonnées SONUC**",
+              "**Non médicales**",
+              "**Dashboard**", 
+              "**Personnel**"])
 
 
 #==============ONGLET DONNEES==========================
-with tab_[0]:   
-    st.write("### Données sur les chèque rejetés et acceptés")
-    st.dataframe(data_rejet)
-    st.write("### Données de synthèse")
-    st.dataframe(data_synthese)
-    valide=data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
-    recu=data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()
-    st.write("### Données initiales")
-    st.dataframe(data_initial)
-#==============ONGLET GENERAL===================
+#with tab_[0]:   
+  #  st.write("### Données sur les chèque rejetés et acceptés")
+   # st.dataframe(data_rejet)
+   # st.write("### Données de synthèse")
+   # st.dataframe(data_synthese)
+  #  valide=data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+  #  recu=data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()
+   # st.write("### Données initiales")
+   # st.dataframe(data_initial)
+    
+
+#==============ONGLET INDICATEURS==========================
+with tab_[0]:
+    cf=st.columns(2)
+    with cf[0]:
+        fosa2=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"])
+    with cf[1]:
+        region2=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique())
+    
+    data_rejet=data_rejet[data_rejet["Région"].isin(region2)] if len(region2)!=0 else data_rejet
+    data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa2)] if len(fosa2)!=0 else data_rejet
+    
+    montant=data_rejet.groupby("statut du chèque").agg({"Montant rejeté par le CM":"sum"}).reset_index()
+    
+    
+    # Tableau croisé : somme du "Montant rejeté par le CM" par "Catégorie" et "statut du chèque"
+    montant_cat_statut = pd.pivot_table(
+        data_rejet,
+        index="Catégorie",
+        columns="statut du chèque",
+        values="Montant rejeté par le CM",
+        aggfunc="sum",
+        fill_value=0
+    ).reset_index()
+
+    # Convertir les colonnes de montants en Int64 pour garder les NaN si besoin
+    for col in montant_cat_statut.columns[1:]:
+        montant_cat_statut[col] = montant_cat_statut[col].astype("Int64")
+
+    # Exposer le dataframe pour réutilisation éventuelle
+    montant_cat_statut["Ordre de recette des FOSA"] = montant_cat_statut["Rejet TOTAL selon le CM"]+montant_cat_statut["Rejet PARTIEL selon le CM"]
+    montant_cat_statut["A verser par l'Etat"]=montant_cat_statut["Validé BON A PAYER selon le CM"]  
+    
+    df_montant_cat_statut=montant_cat_statut[["Catégorie","Ordre de recette des FOSA", "A verser par l'Etat"]]
+    st.caption("Analyse sur les montants")
+    kpi_col3=st.columns(3)
+    #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
+    nb_fosa_to_audit=echantillon.shape[0]
+    fosa_edited=len(initial_to_use["FOSA"].unique())
+    
+    with kpi_col3[0]:
+        montant_associe = montant.loc[montant["statut du chèque"].isin(["Rejet TOTAL selon le CM","Rejet PARTIEL selon le CM"]) , "Montant rejeté par le CM"].sum()
+        montant_to_reciev = int(montant_associe) if not pd.isna(montant_associe) else 0
+        display_single_metric_advanced("Ordre de recette des FOSA",montant_to_reciev, delta=0, color_scheme="green", unit="XAF")
+    
+    with kpi_col3[1]:
+        montant_associe2 = montant.loc[montant["statut du chèque"]=="Validé BON A PAYER selon le CM" , "Montant rejeté par le CM"].sum()
+        montant_to_pay = int(montant_associe2) if not pd.isna(montant_associe2) else 0
+        display_single_metric_advanced("Montant à reverser par l'Etat au FOSA",montant_to_pay, delta=0,color_scheme="red", unit="XAF")
+    with kpi_col3[2]: 
+        taux_global_NV=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum()-synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
+        display_single_metric_advanced("Montant à net recevoir des FOSA",montant_to_reciev-montant_to_pay, delta=0,color_scheme="orange", unit="XAF")
+
+    st.write(" ")
+  
+    cc=st.columns([4,2])
+    with cc[0]:
+        # Bar chart groupé (non empilé) avec étiquettes de données pour df_montant_cat_statut
+        if df_montant_cat_statut is None or df_montant_cat_statut.empty:
+            st.info("Aucune donnée disponible pour le graphique des montants.")
+        else:
+            # identifier colonne de catégorie et colonnes de valeurs
+            cat_col = df_montant_cat_statut.columns[0]
+            value_cols = [c for c in df_montant_cat_statut.columns if c != cat_col]
+
+            df_plot = df_montant_cat_statut.fillna(0)
+            labels = df_plot[cat_col].astype(str).tolist()
+
+            # construire les séries (barres groupées) avec étiquettes visibles
+            base_colors = ["#5470C6", "#91CC75", "#EE6666", "#FAC858", "#73C0DE", "#3BA272"]
+            series = []
+            for i, col in enumerate(value_cols):
+                series.append({
+                    "name": str(col),
+                    "type": "bar",
+                    "barWidth": "20%",
+                    "data": df_plot[col].astype(float).tolist(),
+                    "label": {"show": True, "position": "top", "formatter": "{c}"},
+                    "itemStyle": {"color": base_colors[i % len(base_colors)]}
+                })
+
+            ymax = int(df_plot[value_cols].to_numpy().max() * 1.1) if len(value_cols) > 0 else 0
+
+            options = {
+                "backgroundColor": "transparent",
+                "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                "legend": {"data": [str(c) for c in value_cols], "top": "6%"},
+                "grid": {"left": "6%", "right": "4%", "bottom": "12%", "containLabel": True},
+                "xAxis": [{"type": "category", "data": labels, "axisLabel": {"rotate": 30, "interval": 0}}],
+                "yAxis": [{"type": "value", "min": 0, "max": ymax}],
+                "series": series
+            }
+
+            st_echarts(options=options, height="480px", key="montant_cat_statut_chart")
+    
+    with cc[1]:
+        nb_fosa_to_audit=echantillon.shape[0]
+        fosa_edited=len(data_initial["FOSA"].unique())
+        taux_global_rejet=(round(100*data_rejet.shape[0]/data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum(),2))
+        display_single_metric_advanced("Taux global de rejet",taux_global_rejet, delta=0, color_scheme="green", unit="%")
+        st.write(" ")
+        taux_global_V=(round(100*(data_rejet[data_rejet["Statut initial chèque"]=="Validé selon MC"].shape[0])/data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum(),2))
+        display_single_metric_advanced("Taux rejet factures valides",taux_global_V, delta=0,color_scheme="red", unit="%")
+
+        st.write(" ")
+        taux_global_NV=(round(100*(data_rejet[data_rejet["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()-data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
+        display_single_metric_advanced("Taux réhabilitation facture NV",taux_global_NV, delta=0,color_scheme="orange", unit="%")
+
+    #============================================================================================================
+    
+        
+    # Construction d'un dataframe par District avec les 3 taux demandés
+    districts = sorted(list(data_rejet["District"].dropna().unique()))
+    if "District" in data_synthese.columns:
+        synth_districts = list(data_synthese["District"].dropna().unique())
+        for d in synth_districts:
+            if d not in districts:
+                districts.append(d)
+
+    rows = []
+    for d in districts:
+        # numérateurs
+        rej_count = data_rejet[data_rejet["District"] == d].shape[0]
+        valid_count = data_rejet[(data_rejet["District"] == d) & (data_rejet["Statut initial chèque"] == "Validé selon MC")].shape[0]
+        non_valid_count = data_rejet[(data_rejet["District"] == d) & (data_rejet["Statut initial chèque"] == "Rejeté selon MC")].shape[0]
+
+        # dénominateurs (par district si disponible sinon total)
+        if "District" in data_synthese.columns:
+            total_recu = data_synthese[data_synthese["District"] == d]["NOMBRE TOTAL DE FACTURE RECU"].sum()
+            total_valide_mc = data_synthese[data_synthese["District"] == d]["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+        else:
+            total_recu = data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()
+            total_valide_mc = data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+
+        denom_nv = total_recu - total_valide_mc
+
+        taux_rejet = (100 * rej_count / total_recu) if total_recu and total_recu > 0 else np.nan
+        taux_V = (100 * valid_count / total_valide_mc) if total_valide_mc and total_valide_mc > 0 else np.nan
+        taux_NV = (100 * non_valid_count / denom_nv) if denom_nv and denom_nv > 0 else np.nan
+
+        rows.append({
+            "District": d,
+            "taux_global_rejet": round(taux_rejet, 2) if not pd.isna(taux_rejet) else np.nan,
+            "taux_global_V": round(taux_V, 2) if not pd.isna(taux_V) else np.nan,
+            "taux_global_NV": round(taux_NV, 2) if not pd.isna(taux_NV) else np.nan,
+        })
+
+    df_taux_par_district = pd.DataFrame(rows).sort_values("District").reset_index(drop=True)
+    st.caption("Taux de rejet, Taux rejet factures valides et Taux réhabilitation facture non validé (en %) — survolez les barres pour voir les valeurs.")
+    col_tx=st.columns([10,1])
+     
+    with col_tx[0]:
+        # Préparer les données (remplacer les NaN par 0 pour l'affichage)
+        df_plot = df_taux_par_district.copy().fillna(0)
+        labels = df_plot["District"].astype(str).tolist()
+        rej = df_plot["taux_global_rejet"].tolist()
+        val = df_plot["taux_global_V"].tolist()
+        nonval = df_plot["taux_global_NV"].tolist()
+
+
+        options = {
+            "backgroundColor": "transparent",
+            "tooltip": {
+                "trigger": "axis",
+                "axisPointer": {"type": "shadow"},
+                "formatter": "{b0}<br/>{a0}: {c0}%<br/>{a1}: {c1}%<br/>{a2}: {c2}%"
+            },
+            "legend": {
+                "data": ["Taux rejet", "Taux rejet FV", "Taux  réhabilitation FNV"],
+                "top": "6%",
+                "textStyle": {"color": "#2c3e50"}
+            },
+            "grid": {"left": "6%", "right": "4%", "bottom": "8%", "containLabel": True},
+            "xAxis": [
+                {
+                    "type": "category",
+                    "data": labels,
+                    "axisTick": {"alignWithLabel": True},
+                    "axisLabel": {"rotate": 30, "interval": 0, "color": "#34495e"},
+                    "axisLine": {"lineStyle": {"color": "#ecf0f1"}}
+                }
+            ],
+            "yAxis": [
+                {
+                    "type": "value",
+                    "name": "%",
+                    "min": 0,
+                    "max": np.max([np.max(rej), np.max(val), np.max(nonval)])+5,
+                    "axisLabel": {"formatter": "{value} %", "color": "#34495e"},
+                    "splitLine": {"lineStyle": {"type": "dashed", "color": "#ecf0f1"}}
+                }
+            ],
+            "color": [
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#f73c42"}, {"offset": 1, "color": "#fad0c4"}]},
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#5512f1"}, {"offset": 1, "color": "#fbc2eb"}]},
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#16dbe9"}, {"offset": 1, "color": "#66a6ff"}]}
+            ],
+            "series": [
+                {
+                    "name": "Taux rejet",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": rej,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                },
+                {
+                    "name": "Taux rejet FV",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": val,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                },
+                {
+                    "name": "Taux  réhabilitation FNV",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": nonval,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                }
+            ],
+            "toolbox": {
+                "feature": {
+                    "saveAsImage": {"title": "Enregistrer"},
+                    "dataView": {"title": "Données", "readOnly": True}
+                },
+                "right": 10
+            }
+        }
+
+        st_echarts(options=options, height="520px", key="tau")
+    
+    
+
+
+#==============ONGLET FORFAITAIRES ===================
 with tab_[1]:
+    cf1=st.columns(2)
+    with cf1[0]:
+        fosa3=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"],key="fosa3")
+    with cf1[1]:
+        region3=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region3")
+    
+    data_rejet=data_rejet[data_rejet["Catégorie"]=="Forfaitaires"]
+    data_synthese=data_synthese[data_synthese["Type de prestation"]=="Forfaitaires"]
+    
+    data_rejet=data_rejet[data_rejet["Région"].isin(region3)] if len(region3)!=0 else data_rejet
+    data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa3)] if len(fosa3)!=0 else data_rejet
+    
+    montant=data_rejet.groupby("statut du chèque").agg({"Montant rejeté par le CM":"sum"}).reset_index()
+    
+    
+    # Tableau croisé : somme du "Montant rejeté par le CM" par "Catégorie" et "statut du chèque"
+    montant_cat_statut = pd.pivot_table(
+        data_rejet,
+        index="Catégorie",
+        columns="statut du chèque",
+        values="Montant rejeté par le CM",
+        aggfunc="sum",
+        fill_value=0
+    ).reset_index()
+
+    # Convertir les colonnes de montants en Int64 pour garder les NaN si besoin
+    for col in montant_cat_statut.columns[1:]:
+        montant_cat_statut[col] = montant_cat_statut[col].astype("Int64")
+
+    # Exposer le dataframe pour réutilisation éventuelle
+    # S'assurer que les colonnes attendues existent; les créer avec 0 si elles manquent
+    for _col in ["Rejet TOTAL selon le CM", "Rejet PARTIEL selon le CM", "Validé BON A PAYER selon le CM"]:
+        if _col not in montant_cat_statut.columns:
+            montant_cat_statut[_col] = 0
+    # Convertir en numérique et remplacer NaN par 0, garder le type Int64
+    for _col in ["Rejet TOTAL selon le CM", "Rejet PARTIEL selon le CM", "Validé BON A PAYER selon le CM"]:
+        montant_cat_statut[_col] = pd.to_numeric(montant_cat_statut[_col], errors="coerce").fillna(0).astype("Int64")
+
+    montant_cat_statut["Ordre de recette des FOSA"] = montant_cat_statut["Rejet TOTAL selon le CM"] + montant_cat_statut["Rejet PARTIEL selon le CM"]
+    montant_cat_statut["A verser par l'Etat"]=montant_cat_statut["Validé BON A PAYER selon le CM"]  
+    
+    df_montant_cat_statut=montant_cat_statut[["Catégorie","Ordre de recette des FOSA", "A verser par l'Etat"]]
+    st.caption("Analyse sur les montants")
+    kpi_col3=st.columns(3)
+    #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
+    nb_fosa_to_audit=echantillon.shape[0]
+    fosa_edited=len(initial_to_use["FOSA"].unique())
+    
+    with kpi_col3[0]:
+        montant_associe = montant.loc[montant["statut du chèque"].isin(["Rejet TOTAL selon le CM","Rejet PARTIEL selon le CM"]) , "Montant rejeté par le CM"].sum()
+        montant_to_reciev = int(montant_associe) if not pd.isna(montant_associe) else 0
+        display_single_metric_advanced("Ordre de recette des FOSA",montant_to_reciev, delta=0, color_scheme="green", unit="XAF")
+    
+    with kpi_col3[1]:
+        montant_associe2 = montant.loc[montant["statut du chèque"]=="Validé BON A PAYER selon le CM" , "Montant rejeté par le CM"].sum()
+        montant_to_pay = int(montant_associe2) if not pd.isna(montant_associe2) else 0
+        display_single_metric_advanced("Montant à reverser par l'Etat au FOSA",montant_to_pay, delta=0,color_scheme="red", unit="XAF")
+    with kpi_col3[2]: 
+        taux_global_NV=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum()-synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
+        display_single_metric_advanced("Montant à net recevoir des FOSA",montant_to_reciev-montant_to_pay, delta=0,color_scheme="orange", unit="XAF")
+
+    st.write(" ")
+  
+    cc=st.columns([4,2])
+    with cc[0]:
+        # Construction d'un dataframe par District avec les 3 taux demandés
+        districts = sorted(list(data_rejet["District"].dropna().unique()))
+        if "District" in data_synthese.columns:
+            synth_districts = list(data_synthese["District"].dropna().unique())
+            for d in synth_districts:
+                if d not in districts:
+                    districts.append(d)
+
+        rows = []
+        for d in districts:
+            # numérateurs
+            rej_count = data_rejet[data_rejet["District"] == d].shape[0]
+            valid_count = data_rejet[(data_rejet["District"] == d) & (data_rejet["Statut initial chèque"] == "Validé selon MC")].shape[0]
+            non_valid_count = data_rejet[(data_rejet["District"] == d) & (data_rejet["Statut initial chèque"] == "Rejeté selon MC")].shape[0]
+
+            # dénominateurs (par district si disponible sinon total)
+            if "District" in data_synthese.columns:
+                total_recu = data_synthese[data_synthese["District"] == d]["NOMBRE TOTAL DE FACTURE RECU"].sum()
+                total_valide_mc = data_synthese[data_synthese["District"] == d]["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+            else:
+                total_recu = data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()
+                total_valide_mc = data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()
+
+            denom_nv = total_recu - total_valide_mc
+
+            taux_rejet = (100 * rej_count / total_recu) if total_recu and total_recu > 0 else np.nan
+            taux_V = (100 * valid_count / total_valide_mc) if total_valide_mc and total_valide_mc > 0 else np.nan
+            taux_NV = (100 * non_valid_count / denom_nv) if denom_nv and denom_nv > 0 else np.nan
+
+            rows.append({
+                "District": d,
+                "taux_global_rejet": round(taux_rejet, 2) if not pd.isna(taux_rejet) else np.nan,
+                "taux_global_V": round(taux_V, 2) if not pd.isna(taux_V) else np.nan,
+                "taux_global_NV": round(taux_NV, 2) if not pd.isna(taux_NV) else np.nan,
+            })
+
+        df_taux_par_district = pd.DataFrame(rows).sort_values("District").reset_index(drop=True)
+        st.caption("Taux de rejet, Taux rejet factures valides et Taux réhabilitation facture non validé (en %) — survolez les barres pour voir les valeurs.")
+        # Préparer les données (remplacer les NaN par 0 pour l'affichage)
+        df_plot = df_taux_par_district.copy().fillna(0)
+        labels = df_plot["District"].astype(str).tolist()
+        rej = df_plot["taux_global_rejet"].tolist()
+        val = df_plot["taux_global_V"].tolist()
+        nonval = df_plot["taux_global_NV"].tolist()
+
+
+        options = {
+            "backgroundColor": "transparent",
+            "tooltip": {
+                "trigger": "axis",
+                "axisPointer": {"type": "shadow"},
+                "formatter": "{b0}<br/>{a0}: {c0}%<br/>{a1}: {c1}%<br/>{a2}: {c2}%"
+            },
+            "legend": {
+                "data": ["Taux rejet", "Taux rejet FV", "Taux  réhabilitation FNV"],
+                "top": "6%",
+                "textStyle": {"color": "#2c3e50"}
+            },
+            "grid": {"left": "6%", "right": "4%", "bottom": "8%", "containLabel": True},
+            "xAxis": [
+                {
+                    "type": "category",
+                    "data": labels,
+                    "axisTick": {"alignWithLabel": True},
+                    "axisLabel": {"rotate": 30, "interval": 0, "color": "#34495e"},
+                    "axisLine": {"lineStyle": {"color": "#ecf0f1"}}
+                }
+            ],
+            "yAxis": [
+                {
+                    "type": "value",
+                    "name": "%",
+                    "min": 0,
+                    "max": np.max([np.max(rej), np.max(val), np.max(nonval)])+5,
+                    "axisLabel": {"formatter": "{value} %", "color": "#34495e"},
+                    "splitLine": {"lineStyle": {"type": "dashed", "color": "#ecf0f1"}}
+                }
+            ],
+            "color": [
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#f73c42"}, {"offset": 1, "color": "#fad0c4"}]},
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#5512f1"}, {"offset": 1, "color": "#fbc2eb"}]},
+                {"type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                "colorStops": [{"offset": 0, "color": "#16dbe9"}, {"offset": 1, "color": "#66a6ff"}]}
+            ],
+            "series": [
+                {
+                    "name": "Taux rejet",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": rej,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                },
+                {
+                    "name": "Taux rejet FV",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": val,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                },
+                {
+                    "name": "Taux  réhabilitation FNV",
+                    "type": "bar",
+                    "barWidth": "28%",
+                    "data": nonval,
+                    "itemStyle": {"borderRadius": [6, 6, 0, 0]},
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                }
+            ],
+            "toolbox": {
+                "feature": {
+                    "saveAsImage": {"title": "Enregistrer"},
+                    "dataView": {"title": "Données", "readOnly": True}
+                },
+                "right": 10
+            }
+        }
+
+        st_echarts(options=options, height="520px", key="tajhu")
+    
+    with cc[1]:
+        nb_fosa_to_audit=echantillon.shape[0]
+        fosa_edited=len(data_initial["FOSA"].unique())
+        taux_global_rejet=(round(100*data_rejet.shape[0]/data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum(),2))
+        display_single_metric_advanced("Taux global de rejet",taux_global_rejet, delta=0, color_scheme="green", unit="%")
+        st.write(" ")
+        taux_global_V=(round(100*(data_rejet[data_rejet["Statut initial chèque"]=="Validé selon MC"].shape[0])/data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum(),2))
+        display_single_metric_advanced("Taux rejet factures valides",taux_global_V, delta=0,color_scheme="red", unit="%")
+
+        st.write(" ")
+        taux_global_NV=(round(100*(data_rejet[data_rejet["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(data_synthese["NOMBRE TOTAL DE FACTURE RECU"].sum()-data_synthese["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
+        display_single_metric_advanced("Taux réhabilitation facture NV",taux_global_NV, delta=0,color_scheme="orange", unit="%")
+
+    #============================================================================================================
+    
+
+#==============ONGLET PLAFONNEE SONUB ===================
+with tab_[2]:
+    pass
+
+#==============ONGLET PLAFONNEE SONUC ===================
+with tab_[3]:
+    pass
+
+#==============ONGLET NON MEDICALE ===================
+with tab_[4]:
+    pass
+
+
+#==============ONGLET DASHBOARD ===================
+with tab_[5]:
 
     kpi_col=st.columns(3)
     #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
@@ -518,11 +984,11 @@ with tab_[1]:
         
     with kpi_col2[1]:
         taux_global_V=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Validé selon MC"].shape[0])/synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum(),2))
-        display_single_metric_advanced("Taux global de validation",taux_global_V, delta=0,color_scheme="red", unit="%")
+        display_single_metric_advanced("Taux rejet factures valides",taux_global_V, delta=0,color_scheme="red", unit="%")
 
     with kpi_col2[2]: 
         taux_global_NV=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum()-synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
-        display_single_metric_advanced("Taux global de non validation",taux_global_NV, delta=0,color_scheme="orange", unit="%")
+        display_single_metric_advanced("Taux réhabilitation facture NV",taux_global_NV, delta=0,color_scheme="orange", unit="%")
 
     # Construction d'un dataframe par District avec les 3 taux demandés
     districts = sorted(list(rejet_to_use["District"].dropna().unique()))
@@ -653,8 +1119,9 @@ with tab_[1]:
     with col_tx[1]:
         st.dataframe(df_taux_par_district)
         st.write("")
-#==============ONGLET PERSONNEL==========================
-with tab_[2]:
+        
+#++++++++++++++++++++ONGLET PERSONNEL++++++++++++++++++++++++
+with tab_[6]:
     def main():
     #st.write("Autre approche: Au cas ou la première approche ne marche pas, inscrivez vous dans l'onglet connexion ci contre et utiliser vos identifiants pour vous connecter")
         is_authenticated = authentication_system("Enqueteur")
