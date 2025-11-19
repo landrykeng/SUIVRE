@@ -10,7 +10,7 @@ from streamlit_echarts import st_echarts
 
 # Configuration de la page
 st.set_page_config(
-    page_title="Tableau de Bord collecte FOSA",
+    page_title="Tableau de Bord collecte CHEQUE SANTE",
     layout="wide",
     page_icon="https://upload.wikimedia.org/wikipedia/commons/6/6b/Bitmap_Icon_FOSA.png"
 )
@@ -359,7 +359,7 @@ with st.sidebar:
                         width: 200px; height: 80px; margin: 0 auto; border-radius: 15px;
                         display: flex; align-items: center; justify-content: center;
                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);'>
-                <span style='font-size: 40px;'>FOSA</span>
+                <span style='font-size: 40px;'>CHEQUE SANTE</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
