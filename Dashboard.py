@@ -444,6 +444,8 @@ with tab_[0]:
     data_rejet=data_rejet[data_rejet["Région"].isin(region2)] if len(region2)!=0 else data_rejet
     data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa2)] if len(fosa2)!=0 else data_rejet
     
+    data_rejet
+    data_synthese
     montant=data_rejet.groupby("statut du chèque").agg({"Montant rejeté par le CM":"sum"}).reset_index()
     
     
@@ -886,8 +888,11 @@ with tab_[2]:
     with cf2[1]:
         region4=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region4")
     
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     data_rejet=data_rejet[data_rejet["Catégorie"]=="Plafonnées SONUB"]
     data_synthese=data_synthese[data_synthese["Type de prestation"]=="Plafonnées SONUB"]
+    
     
     data_rejet=data_rejet[data_rejet["Région"].isin(region4)] if len(region4)!=0 else data_rejet
     data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa4)] if len(fosa4)!=0 else data_rejet
@@ -1103,6 +1108,8 @@ with tab_[3]:
     with cf3[1]:
         region6=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region6")
     
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     data_rejet=data_rejet[data_rejet["Catégorie"]=="Plafonnées SONUC"]
     data_synthese=data_synthese[data_synthese["Type de prestation"]=="Plafonnées SONUC"]
     
@@ -1317,6 +1324,9 @@ with tab_[4]:
     with cf8[1]:
         region7=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region7")
     
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
+    
     data_rejet=data_rejet[data_rejet["Catégorie"]=="Non médicales"]
     data_synthese=data_synthese[data_synthese["Type de prestation"]=="Non médicales"]
     
@@ -1527,6 +1537,8 @@ with tab_[4]:
 #==============ONGLET DASHBOARD ===================
 with tab_[5]:
 
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     kpi_col=st.columns(3)
     #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
     nb_fosa_to_audit=echantillon.shape[0]
