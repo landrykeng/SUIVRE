@@ -442,7 +442,7 @@ with tab_[1]:
 
     with col_[0]:
         #
-        create_bar_chart_from_contingency(tab_cheq_district, var1_name="NOM DISTRICT", title="Chèque à saisir vs Chèque saisi par district", height="400px" )
+        create_bar_chart_from_contingency(tab_cheq_district, var1_name="NOM DISTRICT", title="Chèque à saisir vs Chèque saisi par district", height="700px" )
         #create_crossed_bar_chart(good_data,var1="Region",var2="Statut_cheque",title="Répartition des chèques par région",height="350px" ) 
 
     with col_[1]:
