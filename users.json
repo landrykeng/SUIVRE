@@ -1,0 +1,28 @@
+{
+    "users": {
+        "ENQ01": {
+            "password": "c2ee8e4afb6ea19d3610dda42de913ba4cf912eb8a0de955242a7774b02e2bf1",
+            "status": "Enqueteur",
+            "email": "ENQ01@example.com",
+            "created_at": "2025-11-10 05:46:50"
+        },
+        "ENQ02": {
+            "password": "9628803e8a2ad055ac4f9bb7023459faf8cb1fd5629be5ba043c680c1e1efcfa",
+            "status": "Enqueteur",
+            "email": "ENQ02@example.com",
+            "created_at": "2025-11-10 05:46:50"
+        },
+        "ENQ03": {
+            "password": "555052c9af8676b5b32b44b884a0537a3a17964e56331af41f826c3ffcf36726",
+            "status": "Enqueteur",
+            "email": "ENQ03@example.com",
+            "created_at": "2025-11-10 05:46:50"
+        },
+        "ENQ04": {
+            "password": "20dd30443430f16c78985ac22db61b882be174917f17feee9e856b03cfe68040",
+            "status": "Enqueteur",
+            "email": "ENQ04@example.com",
+            "created_at": "2025-11-10 05:46:50"
+        }
+    }
+}

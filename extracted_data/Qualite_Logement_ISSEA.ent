@@ -1,0 +1,47 @@
+{
+  "software": "CSPro",
+  "version": 8.0,
+  "fileType": "form",
+  "name": "QUALITE_LOGEMENT_ISSEA_FORM",
+  "labels": [
+    {
+      "text": "Questionnaire Qualité Logement et Performance Académique"
+    }
+  ],
+  "forms": [
+    {
+      "name": "MENAGE_FORM",
+      "labels": [
+        {
+          "text": "Questionnaire ménage"
+        }
+      ],
+      "record": "MENAGE_REC",
+      "fields": [
+        "TYPE_LOGEMENT",
+        "NBR_OCCUPANTS",
+        "NB_CHAMBRES",
+        "EAU",
+        "ELECTRICITE",
+        "BRUIT"
+      ]
+    },
+    {
+      "name": "ETUDIANT_FORM",
+      "labels": [
+        {
+          "text": "Questionnaire étudiant"
+        }
+      ],
+      "record": "ETUDIANT_REC",
+      "fields": [
+        "ID_ETUDIANT",
+        "SEXE",
+        "AGE",
+        "NIVEAU",
+        "NB_HEURES_ETUDE",
+        "MOYENNE_SEM"
+      ]
+    }
+  ]
+}
