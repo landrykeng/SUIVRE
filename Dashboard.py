@@ -15,15 +15,13 @@ st.set_page_config(
 )
 
 
-
+st.session_state.df_rejet=pd.read_excel("Data_collected.xlsx",sheet_name="Rejet")
+st.session_state.df_synthese=pd.read_excel("Data_collected.xlsx",sheet_name="Synthese")
+st.session_state.df_initial=pd.read_excel("Data_collected.xlsx",sheet_name="Initial")
 
 #===========================IMPORTATION DES DONNEES=====================================
 # IMPORTATION DES DONNES
-if position==1:
-    upgrade_data()
-    st.session_state.position=0
-    position=st.session_state.position
-    
+
 data_rejet=st.session_state.df_rejet
 data_synthese=st.session_state.df_synthese
 data_initial=st.session_state.df_initial
@@ -373,7 +371,7 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
     
-    # Sélecteur d'année
+    region=st.multiselect("Région", data_rejet["Région"].unique(),default=data_rejet["Région"].unique())
     fosa = st.multiselect("Statut FOSA", data_rejet["Statut FOSA"].unique(),default=data_rejet["Statut FOSA"].unique())
     annee = st.multiselect("Année", data_rejet["annee"].unique(),default=data_rejet["annee"].unique())
     # Sélecteur de période
@@ -381,15 +379,17 @@ with st.sidebar:
     
     st.markdown("<br>", unsafe_allow_html=True)
 
- 
+rejet_to_use=data_rejet[data_rejet['Région'].isin(region)] if len(region)!=0 else data_rejet
 rejet_to_use=data_rejet[data_rejet['Statut FOSA'].isin(fosa)] if len(fosa)!=0 else data_rejet
 rejet_to_use=rejet_to_use[rejet_to_use['annee'].isin(annee)] if len(annee)!=0 else rejet_to_use
 rejet_to_use=rejet_to_use[rejet_to_use['Mois'].isin(mois)] if len(mois)!=0 else rejet_to_use
 
+synthese_to_use=data_synthese[data_synthese['Région'].isin(region)] if len(region)!=0 else data_synthese
 synthese_to_use=data_synthese[data_synthese['Statut FOSA'].isin(fosa)] if len(fosa)!=0 else data_synthese
 synthese_to_use=synthese_to_use[synthese_to_use['annee'].isin(annee)] if len(annee)!=0 else synthese_to_use
 synthese_to_use=synthese_to_use[synthese_to_use['Mois'].isin(mois)] if len(mois)!=0 else synthese_to_use
 
+initial_to_use=data_initial[data_initial['Région'].isin(region)] if len(region)!=0 else data_initial
 initial_to_use=data_initial[data_initial['Statut FOSA'].isin(fosa)] if len(fosa)!=0 else data_initial
 #initial_to_use=initial_to_use[initial_to_use['annee'].isin(annee)] if len(annee)!=0 else initial_to_use
 initial_to_use=initial_to_use[initial_to_use['Mois'].isin(mois)] if len(mois)!=0 else initial_to_use
@@ -402,7 +402,13 @@ st.markdown("# 📊 Tableau de bord de l'enquête- FOSA 2025")
 
 #st.success(f"Dernière mise à jour effectuée avec succès à {datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}")
 #st.session_state.last_update=datetime.now().strftime('%d/%m/%Y, %H:%M:%S')
-tab_=st.tabs(["**Données**","**Général**", "**Personnel**"])
+update=st.button("Mettre à jour le tableau de bord")
+if update:
+    upgrade_data()
+    
+st.info("Si vous êtes sur PC, ajuster le zoom de votre navigateur à 80% pour une meilleure expérience visuelle. (ctrl + -)", icon="ℹ️")
+tab_=st.tabs(["**Données**","**Dashboard**", "**Personnel**"])
+
 
 #==============ONGLET DONNEES==========================
 with tab_[0]:   
@@ -463,7 +469,6 @@ with tab_[1]:
         #create_pie_chart_from_df(data_facture,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="sjfhbjhc")
     district=st.multiselect("Sélectionnez le(s) district(s)", options=rejet_to_use["NOM DISTRICT"].unique(), default=rejet_to_use["NOM DISTRICT"].unique())
     rejet_district_choosed=rejet_to_use[rejet_to_use["NOM DISTRICT"].isin(district)] if len(district)!=0 else rejet_to_use
-    #df_coherence=pd.pivot_table(rejet_to_use, index="Statut initial chèque", columns="statut du chèque", aggfunc='size', fill_value=0)
     df_coherence=pd.crosstab(rejet_district_choosed["Statut initial chèque"], rejet_district_choosed["statut du chèque"])
     df_coherence["Total"]=df_coherence.sum(axis=1)
     col_1=st.columns([1,2])

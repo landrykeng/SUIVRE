@@ -52,7 +52,7 @@ position=1
 def upgrade_data():
     with st.spinner("Mise à jour des données...", show_time=True):
         try:
-            dg.columns
+            #dg.columns
             download_ftp_files()
             Unzip_All_Files()
             st.session_state.df_rejet, st.session_state.df_synthese, st.session_state.df_initial =extraire_et_agreger_csdb("extracted_data")
@@ -66,6 +66,8 @@ def upgrade_data():
             st.warning("Erreur lors la mise à jour du tableau de bord : prochaine tentative dans 5 minutes")
 
 # Fonction pour calculer la distance entre deux points GPS
+
+
 def haversine(lon1, lat1, lon2, lat2):
     # Convertir les degrés en radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
