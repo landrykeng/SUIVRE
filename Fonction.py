@@ -3027,7 +3027,7 @@ def display_confusion_matrix(df, var1, var2, value=None, title="Matrice de Confu
     
     st_echarts(options=options, height=height, key=keys)
     
-    
+#  
 def display_confusion_from_crosstab(
         matrix, 
         x_title="Axe X", 
