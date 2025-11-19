@@ -28,6 +28,10 @@ data_rejet=st.session_state.df_rejet
 data_synthese=st.session_state.df_synthese
 data_initial=st.session_state.df_initial
 
+data_initial["Mois"]=data_initial["Mois"].replace({"Fervrier":"Février"})
+data_synthese["Mois"]=data_synthese["Mois"].replace({"Fervrier":"Février"})
+data_rejet["Mois"]=data_rejet["Mois"].replace({"Fervrier":"Février"})
+
 data_rejet=data_rejet[data_rejet['Numéro de chèque'].notna()]
 
 for col in data_rejet.select_dtypes(include='number').columns:
@@ -457,18 +461,21 @@ with tab_[1]:
         )
     
         #create_pie_chart_from_df(data_facture,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="sjfhbjhc")
+    
+    #df_coherence=pd.pivot_table(rejet_to_use, index="Statut initial chèque", columns="statut du chèque", aggfunc='size', fill_value=0)
     df_coherence=pd.crosstab(rejet_to_use["Statut initial chèque"], rejet_to_use["statut du chèque"])
     df_coherence["Total"]=df_coherence.sum(axis=1)
-    col_1=st.columns(2)
+    col_1=st.columns([1,2])
     with col_1[0]:
         st.dataframe(df_coherence)
-        create_bar_chart_from_contingency(df_coherence, var1_name="Statut initial chèque", title="Coherence entre statut initial et statut final du chèque", cle="jhbkl")
+        
+        #create_bar_chart_from_contingency(df_coherence, var1_name="Statut initial chèque", title="Coherence entre statut initial et statut final du chèque", cle="jhbkl")
         
             
             
     with col_1[1]:
         st.markdown("Graph2")
-
+        display_confusion_from_crosstab(df_coherence,y_title="Statut initial",x_title="Satut audité", keys="jkbcnksdnkjs",title="Satatut des chèques avant et après audition")
     # Troisième ligne avec Top 5 clients et Revenus par commerciaux
     col1, col2 = st.columns(2)
 

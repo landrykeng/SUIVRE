@@ -3028,5 +3028,154 @@ def display_confusion_matrix(df, var1, var2, value=None, title="Matrice de Confu
     st_echarts(options=options, height=height, key=keys)
     
     
-    
+def display_confusion_from_crosstab(
+        matrix, 
+        x_title="Axe X", 
+        y_title="Axe Y", 
+        title="Matrice de Confusion",
+        color_scheme="Blues",
+        height="300px",
+        icon="🔥",
+        unit="",
+        keys="matrix" + str(random.randint(1, 999))
+    ):
+    """
+    Affiche une matrice de confusion/heatmap à partir d'un tableau croisé déjà préparé.
+
+    Parameters
+    ----------
+    matrix : DataFrame
+        Tableau croisé (index = lignes, colonnes = colonnes).
+    x_title : str
+        Nom de l'axe X.
+    y_title : str
+        Nom de l'axe Y.
+    title : str
+        Titre du graphique.
+    color_scheme : str
+        Schéma de couleurs.
+    height : str
+        Hauteur.
+    icon : str
+        Icône dans le titre.
+    unit : str
+        Unité.
+    keys : str
+        Clé unique Streamlit.
+    """
+
+    # Préparer les labels
+    y_labels = [str(label) for label in matrix.index.tolist()]
+    x_labels = [str(label) for label in matrix.columns.tolist()]
+
+    # Convertir la matrice en format [x, y, value]
+    data = []
+    min_val = float(matrix.min().min())
+    max_val = float(matrix.max().max())
+
+    for i, row_label in enumerate(matrix.index):
+        for j, col_label in enumerate(matrix.columns):
+            val = matrix.loc[row_label, col_label]
+            data.append([int(j), int(i), float(val)])
+
+    # Schémas de couleurs
+    color_maps = {
+        "Blues": ["#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b"],
+        "Reds": ["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#a50f15", "#67000d"],
+        "Greens": ["#f7fcf5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b"],
+        "Purples": ["#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"],
+        "Oranges": ["#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#a63603", "#7f2704"]
+    }
+
+    colors = color_maps.get(color_scheme, color_maps["Blues"])
+
+    # Marges
+    margin_left = "1%"
+    margin_right = "20%"
+    margin_top = "10%"
+    margin_bottom = "10%"
+    x_label_margin = 8
+    y_label_margin = 8
+
+    # Options ECharts
+    options = {
+        "tooltip": {
+            "position": "bottom",
+            
+        },
+        "grid": {
+            "left": margin_left,
+            "right": margin_right,
+            "top": margin_top,
+            "bottom": margin_bottom,
+            "containLabel": True
+        },
+        "xAxis": {
+            "type": "category",
+            "data": x_labels,
+            "splitArea": {"show": True},
+            "axisLabel": {
+                "rotate": 15,
+                "fontSize": 12,
+                "margin": x_label_margin
+            },
+            "name": x_title,
+            "nameLocation": "middle",
+            "nameGap": 30,
+            "nameTextStyle": {"fontSize": 13, "fontWeight": "bold"}
+        },
+        "yAxis": {
+            "type": "category",
+            "data": y_labels,
+            "splitArea": {"show": True},
+            "axisLabel": {
+                "fontSize": 12,
+                "margin": y_label_margin
+            },
+            "name": y_title,
+            "nameLocation": "middle",
+            "nameGap": 50,
+            "nameTextStyle": {"fontSize": 13, "fontWeight": "bold"}
+        },
+        "title": {
+            "text": title,
+            "left": "center",   # options: 'left', 'center', 'right' or pixel/% value
+            "top": "0%",        # options: pixel or '%' (ex: '10px', '5%')
+            "textStyle": {
+                "fontSize": 16,
+                "fontWeight": "bold",
+                "color": "#333"
+            }
+        },
+        "visualMap": {
+            "min": min_val,
+            "max": max_val,
+            "calculable": True,
+            "orient": "vertical",
+            "right": "3%",
+            "top": "center",
+            "inRange": {"color": colors},
+            "text": ["Max", "Min"],
+            "textStyle": {"fontSize": 11}
+        },
+        "series": [{
+            "name": "Matrice",
+            "type": "heatmap",
+            "data": data,
+            "label": {
+                "show": True,
+                "fontSize": 11,
+                "fontWeight": "bold"
+            },
+            "emphasis": {
+                "itemStyle": {
+                    "shadowBlur": 10,
+                    "shadowColor": "rgba(0, 0, 0, 0.5)"
+                }
+            }
+        }]
+    }
+
+    st_echarts(options=options, height=height, key=keys)
+   
 

@@ -660,8 +660,8 @@ VALUE_SETS = {
   },
   "action": {1: "Avancez"},
   "statinc": {
-    1: "Chèque validé selon MC",
-    2: "Chèque rejeté selon MC"
+    1: "Validé selon MC",
+    2: "Rejeté selon MC"
   },
   "cat": {
     1: "Prestations forfaitaires",
@@ -727,9 +727,9 @@ VALUE_SETS = {
  403:'Autres'
   },
   "statch": {
-    1: "Chèque Rejet TOTAL selon le CM",
-    2: "Chèque Rejet PARTIEL selon le CM",
-    3: "Chèque validé BON A PAYER selon le CM"
+    1: "Rejet TOTAL selon le CM",
+    2: "Rejet PARTIEL selon le CM",
+    3: "Validé BON A PAYER selon le CM"
   },
   "motif": {1: "Absence de tracabilité",
     2: "Dépassement de plafond",
