@@ -22,6 +22,7 @@ st.session_state.df_initial=pd.read_excel("Data_collected.xlsx",sheet_name="Init
 #===========================IMPORTATION DES DONNEES=====================================
 # IMPORTATION DES DONNES
 
+
 data_rejet=st.session_state.df_rejet
 data_synthese=st.session_state.df_synthese
 data_initial=st.session_state.df_initial
@@ -31,6 +32,10 @@ data_synthese["Mois"]=data_synthese["Mois"].replace({"Fervrier":"Février"})
 data_rejet["Mois"]=data_rejet["Mois"].replace({"Fervrier":"Février"})
 
 data_rejet=data_rejet[data_rejet['Numéro de chèque'].notna()]
+#
+echantillon=pd.read_excel("Echantillon.xlsx")
+echantillon["District"]=echantillon["District"].replace(VALUE_SETS["s0q02"])
+echantillon["Région"]=echantillon["Région"].replace(VALUE_SETS["s0q01"])
 
 for col in data_rejet.select_dtypes(include='number').columns:
     data_rejet[col] = data_rejet[col].astype('Int64')   # garde les NaN
@@ -372,8 +377,8 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     region=st.multiselect("Région", data_rejet["Région"].unique(),default=data_rejet["Région"].unique())
-    fosa = st.multiselect("Statut FOSA", data_rejet["Statut FOSA"].unique(),default=data_rejet["Statut FOSA"].unique())
-    annee = st.multiselect("Année", data_rejet["annee"].unique(),default=data_rejet["annee"].unique())
+    fosa = st.multiselect("Statut FOSA", ["SONUC","SONUB"],default=["SONUC","SONUB"])
+    annee = st.multiselect("Année", [2023,2024],default=[2023,2024])
     # Sélecteur de période
     mois = st.multiselect("Période", data_rejet["Mois"].unique(), default=data_rejet["Mois"].unique())
     
@@ -399,7 +404,6 @@ st.markdown("# 📊 Tableau de bord de l'enquête- FOSA 2025")
 
 #afficher_toutes_les_10_secondes()
 
-
 #st.success(f"Dernière mise à jour effectuée avec succès à {datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}")
 #st.session_state.last_update=datetime.now().strftime('%d/%m/%Y, %H:%M:%S')
 update=st.button("Mettre à jour le tableau de bord")
@@ -423,37 +427,43 @@ with tab_[1]:
 
     kpi_col=st.columns(3)
     #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
-    total_cheque_a_saisir=initial_to_use["Nombre de chèque à saisir"].sum()
-    total_cheq_saisie=rejet_to_use.shape[0]
+    nb_fosa_to_audit=echantillon.shape[0]
+    fosa_edited=len(initial_to_use["FOSA"].unique())
+    
     with kpi_col[0]:
         
-        display_single_metric_advanced("Nombre Total de chèque à Saisir",total_cheque_a_saisir, delta=0, color_scheme="green")
+        display_single_metric_advanced("Nombre FOSA à auditer",nb_fosa_to_audit, delta=0, color_scheme="green")
         
     with kpi_col[1]:
         
-        display_single_metric_advanced("Nombre de chèque saisie",total_cheq_saisie, delta=0,color_scheme="red")
+        display_single_metric_advanced("Nombre de FOSA audité",fosa_edited, delta=0,color_scheme="red")
 
-    with kpi_col[2]:
-        
-        display_single_metric_advanced("Taux de réalisation",round(100*total_cheq_saisie/total_cheque_a_saisir,2), delta=0,color_scheme="orange", unit="%")
+    with kpi_col[2]: #
+        display_single_metric_advanced("Taux de réalisation",round(100*fosa_edited/nb_fosa_to_audit,2), delta=0,color_scheme="orange", unit="%")
 
     st.write("")
     
+    fosa_int_par_district=echantillon.groupby("District").agg({"FOSA":"count"}).rename(columns={"FOSA":"FOSA à auditer"})
+    fosa_int_par_district = fosa_int_par_district.reset_index()
     
-    cheq_init_par_district=initial_to_use.groupby("NOM DISTRICT")["Nombre de chèque à saisir"].sum().reset_index().rename(columns={"Nombre de chèque à saisir":"Chèque à saisir"})
-    cheq_par_district=rejet_to_use.groupby("NOM DISTRICT")["Numéro de chèque"].count().reset_index().rename(columns={"Numéro de chèque":"Chèque saisi"})
-    tab_cheq_district=pd.merge(cheq_init_par_district,cheq_par_district,left_on="NOM DISTRICT", right_on="NOM DISTRICT", how="left")
-    tab_cheq_district=tab_cheq_district.set_index("NOM DISTRICT")
+    fosa_par_district_audit=initial_to_use.drop_duplicates(subset=["FOSA"]).groupby("District").agg({"FOSA":"count"}).rename(columns={"FOSA":"FOSA audité"})
+    fosa_par_district_audit=fosa_par_district_audit.reset_index()
+    
+    tab_fosa_district=fosa_par_district_audit.merge(fosa_int_par_district,on="District", how="left" )
+    # remettre "District" en index et remplacer les éventuels NaN par 0
+    tab_fosa_district = tab_fosa_district.set_index("District")
+    tab_fosa_district[["FOSA à auditer", "FOSA audité"]] = tab_fosa_district[["FOSA à auditer", "FOSA audité"]].fillna(0).astype(int)
+    
     col_= st.columns(2)
 
     with col_[0]:
-        #
-        create_bar_chart_from_contingency(tab_cheq_district, var1_name="NOM DISTRICT", title="Chèque à saisir vs Chèque saisi par district", height="400px" )
+        pass
+        create_bar_chart_from_contingency(tab_fosa_district, var1_name="District", title="Chèque à saisir vs Chèque saisi par district", height="400px" )
         #create_crossed_bar_chart(good_data,var1="Region",var2="Statut_cheque",title="Répartition des chèques par région",height="350px" ) 
 
     with col_[1]:
-        taux_realisation_district=tab_cheq_district.copy()
-        taux_realisation_district["Taux de réalisation"]=round(taux_realisation_district["Chèque saisi"]/taux_realisation_district["Chèque à saisir"],2)
+        taux_realisation_district=tab_fosa_district.copy()
+        taux_realisation_district["Taux de réalisation"] = (taux_realisation_district["FOSA audité"] / taux_realisation_district["FOSA à auditer"]).round(2)
         # créer une liste de couleurs de la même taille que les données
         n = len(taux_realisation_district)
         palette = px.colors.qualitative.Plotly  # palette de base
@@ -467,8 +477,20 @@ with tab_[1]:
         )
     
         #create_pie_chart_from_df(data_facture,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="sjfhbjhc")
-    district=st.multiselect("Sélectionnez le(s) district(s)", options=rejet_to_use["NOM DISTRICT"].unique(), default=rejet_to_use["NOM DISTRICT"].unique())
-    rejet_district_choosed=rejet_to_use[rejet_to_use["NOM DISTRICT"].isin(district)] if len(district)!=0 else rejet_to_use
+    col_f=st.columns([1,1,2])
+    with col_f[0]:
+        district=st.multiselect("Sélectionnez le(s) district(s)", options=rejet_to_use["District"].unique(), default=rejet_to_use["District"].unique())
+        rejet_district_choosed=rejet_to_use[rejet_to_use["District"].isin(district)] if len(district)!=0 else rejet_to_use
+    with col_f[1]:
+        cat=st.multiselect("Catégorie de prestation ", options=rejet_district_choosed["Catégorie"].unique(), default=rejet_district_choosed["Catégorie"].unique())
+        rejet_district_choosed=rejet_to_use[rejet_to_use["Catégorie"].isin(cat)] if len(cat)!=0 else rejet_district_choosed
+    with col_f[2]:
+        type_pres=st.multiselect("Type de prestation ", options=rejet_district_choosed["Type de prestation"].unique(), default=rejet_district_choosed["Type de prestation"].unique())
+        rejet_district_choosed=rejet_to_use[rejet_to_use["Type de prestation"].isin(type_pres)] if len(type_pres)!=0 else rejet_district_choosed
+    
+    
+    
+    
     df_coherence=pd.crosstab(rejet_district_choosed["Statut initial chèque"], rejet_district_choosed["statut du chèque"])
     df_coherence["Total"]=df_coherence.sum(axis=1)
     col_1=st.columns([1,2])
@@ -500,56 +522,7 @@ with tab_[2]:
         is_authenticated = authentication_system("Enqueteur")
         if is_authenticated:
             user=st.session_state.username
-            good_data_user=good_data
-            data_facture_user=data_facture
-            
-            kpi_col_user=st.columns(3)
-
-            acept_facture_user=good_data_user["Statut_facture"].value_counts().to_dict()
-            with kpi_col_user[0]:
-                df_accepted_user=good_data_user[good_data_user["Statut_facture"]=="Acceptée"]
-                coherence_user=df_accepted_user["Coherence"].value_counts().to_dict()
-                display_single_metric_advanced("Chèque validé par le médecin",acept_facture_user["Acceptée"], delta=round(100*coherence_user["Coherent"]/acept_facture_user["Acceptée"],2),delta_label="Coherence", color_scheme="green")
-                
-            with kpi_col_user[1]:    
-                df_accepted_user=good_data_user[good_data_user["Statut_facture"]=="Rejetée"]
-                coherence_user=df_accepted_user["Coherence"].value_counts().to_dict()
-                display_single_metric_advanced("Chèque invalidé par le médecin",acept_facture_user["Rejetée"], delta=round(100*coherence_user["Coherent"]/acept_facture_user["Rejetée"],2),delta_label="Coherence",color_scheme="red")
-
-            with kpi_col_user[2]:
-                df_coherent=good_data_user[good_data_user["Coherence"]=="Coherent"]
-                coherence_user=df_accepted_user["Coherence"].value_counts().to_dict()
-                display_single_metric_advanced("Total chèque",good_data_user.shape[0], delta=round(100*df_coherent.shape[0]/good_data_user.shape[0],2),delta_label="Coherence",color_scheme="orange")
-
-
-            st.write("")
-            # Deuxième ligne avec calendrier et tranches de facturation
-            col_= st.columns([2, 1])
-            
-            with col_[0]:
-                create_crossed_bar_chart(good_data,var1="Region",var2="Statut_cheque",title="Répartition des chèques par région",height="350px", keys="skjdkjnkjfvns" )
-
-        
-            
-            with col_[1]:
-                create_pie_chart_from_df(data_facture_user,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="jbcjhbsdjch")
-                col_1=st.columns(2)
-                with col_1[0]:
-                    st.markdown("Graph1")
-                with col_1[1]:
-                    st.markdown("Graph2")
-
-            # Troisième ligne avec Top 5 clients et Revenus par commerciaux
-            col1, col2 = st.columns(2)
-
-            with col1:
-                display_confusion_matrix(good_data_user, var1="Statut_facture", var2="Statut_cheque", keys="jffkjnj")
-
-            with col2:
-                display_confusion_matrix(good_data_user, var1="Statut_facture", var2="Statut_cheque", value="Montant_mensuel",color_scheme="Oranges", keys="dsbcducvh")
-            
-            st.write(f"Bienvenue **{user}** dans votre section Personnel")
-            st.write("Ici vous pouvez consulter les informations relatives au personnel de FOSA.")
+            st.success(f"Bienvenue {user} ! Vous êtes connecté en tant qu'Enquêteur.", icon="✅")
 
     if __name__ == "__main__":
         main()

@@ -482,10 +482,10 @@ VALUE_SETS = {
     "2025": "2025"
   },
   "type":{
-    1:"Prestations forfaitaires",
-    2:"Prestations plafonnées SONUB",
-    3:"Prestations plafonnées SONUC",
-    4:"Prestations non médicales"},
+    1:"Forfaitaires",
+    2:"Plafonnées SONUB",
+    3:"Plafonnées SONUC",
+    4:"Non médicales"},
   "mois": {
     1: "Janvier",
     2: "Fevrier",
@@ -664,10 +664,10 @@ VALUE_SETS = {
     2: "Rejeté selon MC"
   },
   "cat": {
-    1: "Prestations forfaitaires",
-    2: "Prestations plafonnées SONUB",
-    3: "Prestations plafonnées SONUC",
-    4:"Prestations non médicales"
+    1: "Forfaitaires",
+    2: "Plafonnées SONUB",
+    3: "Plafonnées SONUC",
+    4:"Non médicales"
   },
   "typpres": {101: 'CPN1',
  102: 'CPN2',

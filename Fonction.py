@@ -2761,7 +2761,7 @@ def make_multi_progress_bar_echart(labels, values, colors, titre="", width="100%
             'textStyle': {'fontSize': 16}
         },
         'grid': {
-            'left': '0%',
+            'left': '5%',
             'right': '15%',
             'top': '10%',
             'bottom': '1%',
