@@ -444,8 +444,6 @@ with tab_[0]:
     data_rejet=data_rejet[data_rejet["Région"].isin(region2)] if len(region2)!=0 else data_rejet
     data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa2)] if len(fosa2)!=0 else data_rejet
     
-    data_rejet
-    data_synthese
     montant=data_rejet.groupby("statut du chèque").agg({"Montant rejeté par le CM":"sum"}).reset_index()
     
     
@@ -882,14 +880,14 @@ with tab_[1]:
 
 #==============ONGLET PLAFONNEE SONUB ===================
 with tab_[2]:
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     cf2=st.columns(2)
     with cf2[0]:
         fosa4=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"],key="fosa4")
     with cf2[1]:
         region4=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region4")
     
-    data_rejet=st.session_state.df_rejet
-    data_synthese=st.session_state.df_synthese
     data_rejet=data_rejet[data_rejet["Catégorie"]=="Plafonnées SONUB"]
     data_synthese=data_synthese[data_synthese["Type de prestation"]=="Plafonnées SONUB"]
     
@@ -1102,14 +1100,14 @@ with tab_[2]:
 
 #==============ONGLET PLAFONNEE SONUC ===================
 with tab_[3]:
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     cf3=st.columns(2)
     with cf3[0]:
         fosa6=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"],key="fosa6")
     with cf3[1]:
         region6=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region6")
     
-    data_rejet=st.session_state.df_rejet
-    data_synthese=st.session_state.df_synthese
     data_rejet=data_rejet[data_rejet["Catégorie"]=="Plafonnées SONUC"]
     data_synthese=data_synthese[data_synthese["Type de prestation"]=="Plafonnées SONUC"]
     
@@ -1318,14 +1316,14 @@ with tab_[3]:
 
 #==============ONGLET NON MEDICALE ===================
 with tab_[4]:
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     cf8=st.columns(2)
     with cf8[0]:
         fosa7=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"],key="fosa7")
     with cf8[1]:
         region7=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique(), key="region7")
     
-    data_rejet=st.session_state.df_rejet
-    data_synthese=st.session_state.df_synthese
     
     data_rejet=data_rejet[data_rejet["Catégorie"]=="Non médicales"]
     data_synthese=data_synthese[data_synthese["Type de prestation"]=="Non médicales"]
