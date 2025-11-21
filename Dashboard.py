@@ -1773,6 +1773,15 @@ with tab_[5]:
         st.dataframe(df_taux_par_district)
         st.write("")
         
+    st.markdown("## Tableaux des données")
+    st.write("### Données sur les chèque rejetés et acceptés")
+    st.dataframe(data_rejet)
+    st.write("### Données de synthèse")
+    st.dataframe(data_synthese)
+    st.write("### FOSA auditées")
+    st.dataframe(data_initial)
+
+        
 #++++++++++++++++++++ONGLET PERSONNEL++++++++++++++++++++++++
 with tab_[6]:
     def main():
