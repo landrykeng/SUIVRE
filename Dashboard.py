@@ -1775,24 +1775,43 @@ with tab_[5]:
        
     st.markdown("## Tableaux des données")
 
-    fosa_tab=st.multiselect("Choisisez une FOSA", options=data_initial["FOSA"].unique(), default=data_initial["FOSA"].unique())
-    district_tab=st.multiselect("Choisisez un district", options=data_initial["District"].unique(), default=data_initial["District"].unique())
     prestation_tab=st.multiselect("Choisisez un type de prestation", options=data_synthese["Type de prestation"].unique(), default=data_synthese["Type de prestation"].unique())
     mois_tab=st.multiselect("Choisisez un mois", options=data_rejet["Mois"].unique(), default=data_rejet["Mois"].unique())
     
-    data_rejet=data_rejet[data_rejet["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_rejet
-    data_rejet=data_rejet[data_rejet["District"].isin(district_tab)] if len(district_tab)!=0 else data_rejet
+    #Filtre par catégorie de prestation et mois
     data_rejet=data_rejet[data_rejet["Catégorie"].isin(prestation_tab)] if len(prestation_tab)!=0 else data_rejet
     data_rejet=data_rejet[data_rejet["Mois"].isin(mois_tab)] if len(mois_tab)!=0 else data_rejet
-    
-    data_synthese=data_synthese[data_synthese["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_synthese
-    data_synthese=data_synthese[data_synthese["District"].isin(district_tab)] if len(district_tab)!=0 else data_synthese
     data_synthese=data_synthese[data_synthese["Type de prestation"].isin(prestation_tab)] if len(prestation_tab)!=0 else data_synthese
     data_synthese=data_synthese[data_synthese["Mois"].isin(mois_tab)] if len(mois_tab)!=0 else data_synthese
-    
-    data_initial=data_initial[data_initial["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_initial
-    data_initial=data_initial[data_initial["District"].isin(district_tab)] if len(district_tab)!=0 else data_initial
     data_initial=data_initial[data_initial["Mois"].isin(mois_tab)] if len(mois_tab)!=0 else data_initial
+    
+    #Filtre par district
+    district_tab=st.multiselect("Choisisez un district", options=data_initial["District"].unique(), default=data_initial["District"].unique())
+    data_rejet=data_rejet[data_rejet["District"].isin(district_tab)] if len(district_tab)!=0 else data_rejet
+    data_synthese=data_synthese[data_synthese["District"].isin(district_tab)] if len(district_tab)!=0 else data_synthese
+    data_initial=data_initial[data_initial["District"].isin(district_tab)] if len(district_tab)!=0 else data_initial
+    
+    #filtre par FOSA
+    fosa_tab=st.multiselect("Choisisez une FOSA", options=data_initial["FOSA"].unique(), default=data_initial["FOSA"].unique())
+    data_rejet=data_rejet[data_rejet["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_rejet
+    data_synthese=data_synthese[data_synthese["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_synthese
+    data_initial=data_initial[data_initial["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_initial
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     st.write("### Données sur les chèque rejetés et acceptés")
     st.dataframe(data_rejet)
