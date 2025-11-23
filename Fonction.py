@@ -6,6 +6,7 @@ Date: 2025
 
 import random
 from PIL import Image
+import plotly.graph_objects as go
 import io
 import time
 import streamlit as st
@@ -1506,6 +1507,62 @@ def create_choropleth_map(gdf, geometry_col='geometry', value_col='nombre_questi
 
     folium_static(m, width=width, height=height)
     return m
+
+#12. Fonction pour tracer des graphiques type barre de progression
+def make_multi_progress_bar(labels,values,colors,titre="",width=500,height=400):
+    # Configuration
+    max_blocks = 100  # Nombre total de segments
+    block_size = 1  # Chaque bloc représente 1%
+    space_factor = 0.1  # Espace entre les blocs (réduit à 20% de la largeur d'un bloc)
+
+    fig = go.Figure()
+
+    # Création des barres segmentées
+    for i, (label, value, color) in enumerate(zip(labels, values, colors)):
+        num_filled_blocks = int(value*100) // block_size  # Nombre de blocs colorés
+        num_empty_blocks = max_blocks - num_filled_blocks  # Blocs restants
+
+        # Blocs colorés (progression) avec espacement
+        fig.add_trace(go.Bar(
+            x=[block_size - space_factor] * num_filled_blocks,  # Réduction pour l'espacement
+            y=[label] * num_filled_blocks,
+            orientation='h',
+            hoverinfo="skip",
+            marker=dict(color=color),
+            showlegend=False,
+            width=0.5  # Réduction de la largeur des blocs
+        ))
+
+        # Blocs vides (fond) avec le même espacement
+        fig.add_trace(go.Bar(
+            x=[block_size - space_factor] * num_empty_blocks,
+            y=[label] * num_empty_blocks,
+            orientation='h',
+            hoverinfo="skip",
+            marker=dict(color="rgba(0, 0, 0, 0.2)"),
+            showlegend=False,
+            width=0.5  # Même largeur que les blocs colorés
+        ))
+
+    # Personnalisation du layout
+    fig.update_layout(
+        title=titre,
+        barmode="stack",
+        width=width,height=height,
+        annotations=[dict(text= str(round(100*values[i],2))+'%', x=100*values[i], y=i,
+            font_size=50, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))] + 
+        [dict(text= labels[i], x=-1, y=i+0.5,
+            font_size=30, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))],
+        xaxis=dict(visible=False), 
+        yaxis=dict(visible=False),
+        margin=dict(l=50, r=20, t=20, b=20),
+        paper_bgcolor='rgba(248,248,250,0)',
+        plot_bgcolor='rgba(248,248,250,0)',
+    )
+
+    st.plotly_chart(fig)
+
+
 
 
 def create_questionnaire_time_gauge(temps_remplissage, ecart_type, temps_cible=None, titre="Temps de Remplissage du Questionnaire",cle="gauge_questionnaire"):
