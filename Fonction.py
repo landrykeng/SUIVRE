@@ -237,7 +237,7 @@ def graphique_barre_croise_effectifs(df: pd.DataFrame,
         titre: titre du graphique
         empile: True pour empilé, False pour juxtaposé
     """
-    
+    #
     # Pivoter les données
     pivot_df = df.pivot_table(values=y_col, index=x_col, columns=group_col, fill_value=0)
     

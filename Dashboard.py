@@ -1592,7 +1592,7 @@ with tab_[5]:
         #make_multi_progress_bar_echart( labels=taux_realisation_district.index, values=taux_realisation_district["Taux de réalisation"], titre="Taux de réalisation par district", colors=colors,height="400px",width="100%")
         make_multi_progress_bar(labels=taux_realisation_district.index, values=taux_realisation_district["Taux de réalisation"],titre="Taux de réalisation par district",colors=colors, width=400, height=400)
     
-        #create_pie_chart_from_df(data_facture,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="sjfhbjhc")
+        ##create_pie_chart_from_df(data_facture,column="Statut de Facture selon le Médecin Conseil", colors=["green","red"],height="300px", title="Proportion",cle="sjfhbjhc")
     col_f=st.columns([1,1,2])
     with col_f[0]:
         district=st.multiselect("Sélectionnez le(s) district(s)", options=rejet_to_use["District"].unique(), default=rejet_to_use["District"].unique())
