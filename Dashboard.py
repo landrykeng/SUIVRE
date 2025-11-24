@@ -474,16 +474,17 @@ with tab_[0]:
     
     with kpi_col3[0]:
         montant_associe = montant.loc[montant["statut du chèque"].isin(["Rejet TOTAL selon le CM","Rejet PARTIEL selon le CM"]) , "Montant rejeté par le CM"].sum()
-        montant_to_reciev = int(montant_associe) if not pd.isna(montant_associe) else 0
-        display_single_metric_advanced("Ordre de recette des FOSA",montant_to_reciev, delta=0, color_scheme="green", unit="XAF")
+        montant_to_reciev = format(int(montant_associe),",") if not pd.isna(montant_associe) else 0
+        display_single_metric_advanced("Ordre de recette des FOSA",montant_to_reciev.replace(",", " "), delta=0, color_scheme="green", unit="XAF")
     
     with kpi_col3[1]:
         montant_associe2 = montant.loc[montant["statut du chèque"]=="Validé BON A PAYER selon le CM" , "Montant rejeté par le CM"].sum()
-        montant_to_pay = int(montant_associe2) if not pd.isna(montant_associe2) else 0
-        display_single_metric_advanced("Montant à reverser par l'Etat au FOSA",montant_to_pay, delta=0,color_scheme="red", unit="XAF")
+        montant_to_pay = format(int(montant_associe2),",") if not pd.isna(montant_associe2) else 0
+        display_single_metric_advanced("Montant à reverser par l'Etat au FOSA",montant_to_pay.replace(",", " "), delta=0,color_scheme="red", unit="XAF")
     with kpi_col3[2]: 
         taux_global_NV=(round(100*(rejet_to_use[rejet_to_use["Statut initial chèque"]=="Rejeté selon MC"].shape[0])/(synthese_to_use["NOMBRE TOTAL DE FACTURE RECU"].sum()-synthese_to_use["NOMBRE TOTAL DE FACTURE VALIDE MC"].sum()),2))
-        display_single_metric_advanced("Montant à net recevoir des FOSA",montant_to_reciev-montant_to_pay, delta=0,color_scheme="orange", unit="XAF")
+        dif=format(int(montant_associe)-int(montant_associe2),",")
+        display_single_metric_advanced("Montant à net recevoir des FOSA",dif.replace(",", " "), delta=0,color_scheme="orange", unit="XAF")
 
     st.write(" ")
   
