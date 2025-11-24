@@ -902,10 +902,8 @@ def create_bar_chart_from_contingency(contingency_table,
                 #"name": var1_name,
                 "nameLocation": "middle",
                 "nameGap": 30,
-                "axisLabel": {"rotate": 45 if len(categories) > 8 else 0}
-                ,
                 "axisLabel": {
-                    "rotate": 45 if len(categories) > 8 else 0,
+                    "rotate": 45 if len(categories) > 6 else 0,
                     "interval": 0,
                     "align": "center",
                     "verticalAlign": "top"
