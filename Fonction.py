@@ -896,19 +896,14 @@ def create_bar_chart_from_contingency(contingency_table,
                 "bottom": "20%",
                 "containLabel": True
             },
-            "xAxis": {
-                "type": "category",
-                "data": categories,
-                #"name": var1_name,
-                "nameLocation": "middle",
-                "nameGap": 30,
-                "axisLabel": {
-                    "rotate": 45 if len(categories) > 6 else 0,
-                    "interval": 0,
-                    "align": "center",
-                    "verticalAlign": "top"
-                },
-            },
+            
+            "xAxis": [{"type": "category", 
+                       "data": categories, 
+                       "nameLocation": "middle",
+                       "nameGap": 30,
+                       "axisLabel": {"rotate": 45 if len(categories) > 6 else 0,
+                                     "interval": 0,}}],
+            
             "yAxis": {
                 "type": "value",
                 "name": "Effectifs" + (" (%)" if is_percentage else ""),
