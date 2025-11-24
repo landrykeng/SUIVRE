@@ -861,7 +861,8 @@ def create_bar_chart_from_contingency(contingency_table,
                 "type": "value",
                 "name": "Effectifs" + (" (%)" if is_percentage else ""),
                 "nameLocation": "middle",
-                "nameGap": 30
+                "nameGap": 30,
+                "rotate": 45 if len(categories) > 8 else 0
             },
             "yAxis": {
                 "type": "category",
@@ -1550,7 +1551,7 @@ def make_multi_progress_bar(labels,values,colors,titre="",width=500,height=400):
         barmode="stack",
         width=width,height=height,
         annotations=[dict(text= str(round(100*values[i],2))+'%', x=100*values[i], y=i,
-            font_size=30, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))] + 
+            font_size=20, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))] + 
         [dict(text= labels[i], x=-1, y=i+0.5,
             font_size=25, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))],
         xaxis=dict(visible=False), 
