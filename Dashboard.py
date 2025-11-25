@@ -8,6 +8,7 @@ from Authentification import *
 from Fonction import *
 from streamlit_echarts import st_echarts
 
+
 # Configuration de la page
 st.set_page_config(
     page_title="Tableau de Bord collecte CHEQUE SANTE",
@@ -15,6 +16,10 @@ st.set_page_config(
     page_icon="https://upload.wikimedia.org/wikipedia/commons/6/6b/Bitmap_Icon_FOSA.png"
 )
 
+wb = load_workbook("Data_collected.xlsx", data_only=True)
+ws = wb["Update"]
+
+date_update = ws["A1"].value
 
 st.session_state.df_rejet=pd.read_excel("Data_collected.xlsx",sheet_name="Rejet")
 st.session_state.df_synthese=pd.read_excel("Data_collected.xlsx",sheet_name="Synthese")
@@ -412,6 +417,7 @@ if update:
     upgrade_data()
     
 st.info("Si vous êtes sur PC, ajuster le zoom de votre navigateur à 80% pour une meilleure expérience visuelle. (ctrl + -)", icon="ℹ️")
+st.success("Dernière mise à jour des données : {}".format(date_update.strftime('%d/%m/%Y %H:%M:%S')), icon="✅")
 tab_=st.tabs(["**Indicateurs**",
               "**Prestations Forfaitaires**",
               "**Prestations Plafonnées SONUB**",

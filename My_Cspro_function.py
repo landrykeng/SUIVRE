@@ -8,6 +8,8 @@ import numpy as np
 import zipfile
 import streamlit as st
 from value_sets_output import VALUE_SETS
+from datetime import datetime
+from openpyxl import load_workbook
 
 
 
@@ -550,12 +552,25 @@ def extraire_et_agreger_csdb(rep_csdb):
     
     fichier_data="Data_collected.xlsx"
     
+    
+    
     with pd.ExcelWriter(fichier_data, engine="xlsxwriter") as writer:
         df_rejets_final.to_excel(writer, sheet_name="Rejet", index=False)
         df_synthe_final.to_excel(writer, sheet_name="Synthese", index=False)
         tabr_final.to_excel(writer, sheet_name="Initial", index=False)
     
-    
+    wb = load_workbook(fichier_data)
+
+    # Sélectionner la feuille (la créer si elle n'existe pas)
+    if "Update" not in wb.sheetnames:
+        wb.create_sheet("Update")
+    ws = wb["Update"]   # mettre le nom exact de la feuille
+
+    # Écrire dans une cellule
+    ws["A1"] = datetime.now()
+
+    # Sauvegarder
+    wb.save(fichier_data)
     return df_rejets_final, df_synthe_final, tabr_final
 
 
