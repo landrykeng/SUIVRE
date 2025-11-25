@@ -12,7 +12,7 @@ from datetime import datetime
 from openpyxl import load_workbook
 
 
-
+#
 dico_eleve_enseignant={
     "Etablissement":{101011: 'école publique de DARSO',
     102021: 'école publique de KANTALONG (PACARF)',

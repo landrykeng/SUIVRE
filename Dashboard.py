@@ -8,7 +8,7 @@ from Authentification import *
 from Fonction import *
 from streamlit_echarts import st_echarts
 
-
+#---------------------------------CONFIGURATION DE LA PAGE---------------------------------#
 # Configuration de la page
 st.set_page_config(
     page_title="Tableau de Bord collecte CHEQUE SANTE",
