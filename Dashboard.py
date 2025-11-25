@@ -1796,17 +1796,114 @@ with tab_[5]:
     data_initial=data_initial[data_initial["FOSA"].isin(fosa_tab)] if len(fosa_tab)!=0 else data_initial
     
     
+    #MINI PREVISION
+   
+    data_prev=st.session_state.df_rejet
+    data_prev_int=st.session_state.df_initial
+    FOSA_prev=data_prev_int["FOSA"].unique()
+    nb_fosa=[]
+    montant=[]
+    montant_prev=[]
+    prev_final=[]
+    for i in range (121):
+        nb_fosa.append(i+1)
+        if i <=len(FOSA_prev):
+            list_fosa=FOSA_prev[0:i+1]
+            progress_fosa=round((i+1)/(i+2),2)
+            montant.append(data_prev[data_prev["FOSA"].isin(list_fosa)]["Montant rejeté par le CM"].sum())
+            montant_prev.append(round((data_prev[data_prev["FOSA"].isin(list_fosa)]["Montant rejeté par le CM"].sum())/progress_fosa,2))
+        else:
+            montant.append(pd.NA)
+            progress_fosa=round((i+1)/(i+2),2)
+            montant_prev.append(round((data_prev[data_prev["FOSA"].isin(FOSA_prev)]["Montant rejeté par le CM"].sum())/progress_fosa,2))
     
+    prev_df=pd.DataFrame({"Nombre fosa":nb_fosa, "Montant":montant, "Prévision":montant_prev})
+    prev_df
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+    # (Assure que les valeurs manquantes sont gérées)
+    prev_df = prev_df.sort_values("Nombre fosa")
+
+    df_reg = prev_df.dropna(subset=["Montant"])  # enlève les valeurs manquantes
+    if len(df_reg) > 1:
+        x = df_reg["Nombre fosa"].astype(float).values
+        y = df_reg["Montant"].astype(float).values
+        coeffs = np.polyfit(x, y, 1)
+        a, b = coeffs  # y = ax + b
+        # Valeurs ajustées pour toute la série
+        y_pred = a * prev_df["Nombre fosa"].astype(float).values + b
+    else:
+        y_pred = [None] * len(prev_df)  # Pas assez de données
+
+    # ------------------------------
+    # Configuration du graphique
+    # ------------------------------
+    options = {
+        "title": {
+            "text": "Montant, Prévision & Régression - Nombre de Fosa",
+            "left": "center",
+            "textStyle": {"fontSize": 18}
+        },
+
+        "tooltip": {
+            "trigger": "axis"
+        },
+
+        "legend": {
+            "data": ["Montant", "Prévision", "Régression"],
+            "top": 40
+        },
+
+        "xAxis": {
+            "type": "category",
+            "data": prev_df["Nombre fosa"].tolist()
+        },
+
+        "yAxis": {
+            "type": "value",
+            "name": "Montants"
+        },
+
+        "series": [
+            {
+                "name": "Montant",
+                "type": "line",
+                "smooth": True,
+                "data": prev_df["Montant"].replace({np.nan: None}).tolist(),
+                "symbolSize": 6,
+                "lineStyle": {"width": 3},
+                "areaStyle": {"opacity": 0.15}
+            },
+            {
+                "name": "Prévision",
+                "type": "line",
+                "smooth": True,
+                "data": prev_df["Prévision"].replace({np.nan: None}).tolist(),
+                "symbolSize": 6,
+                "lineStyle": {"width": 3, "type": "dashed"}
+            },
+            {
+                "name": "Régression",
+                "type": "line",
+                "smooth": False,
+                "data": y_pred.round(2).tolist(),
+                "symbolSize": 0,
+                "lineStyle": {"width": 3, "type": "dotted"},
+                "emphasis": {"disabled": True}
+            }
+        ],
+
+        "grid": {
+            "left": "8%",
+            "right": "5%",
+            "bottom": "15%",
+            "top": "18%"
+        }
+    }
+
+    st_echarts(options, height="550px")
+
     
     
     
