@@ -1818,7 +1818,6 @@ with tab_[5]:
             montant_prev.append(round((data_prev[data_prev["FOSA"].isin(FOSA_prev)]["Montant rejeté par le CM"].sum())/progress_fosa,2))
     
     prev_df=pd.DataFrame({"Nombre fosa":nb_fosa, "Montant":montant, "Prévision":montant_prev})
-    prev_df
     
 
 
@@ -1857,12 +1856,19 @@ with tab_[5]:
 
         "xAxis": {
             "type": "category",
-            "data": prev_df["Nombre fosa"].tolist()
+            "data": prev_df["Nombre fosa"].tolist(),
+            "name": "Nombre de Fosa",
+            "nameLocation": "middle",
+            "nameGap": 30,
+            
         },
 
         "yAxis": {
             "type": "value",
-            "name": "Montants"
+            "name": "Montants",
+            "name": "Montant rejeté par le CM (FCFA)",        # ← NOM DE L’AXE Y
+            "nameLocation": "middle",
+            "nameGap": 65,
         },
 
         "series": [
