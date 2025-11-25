@@ -902,7 +902,10 @@ def create_bar_chart_from_contingency(contingency_table,
                        "nameLocation": "middle",
                        "nameGap": 30,
                        "axisLabel": {"rotate": 45 if len(categories) > 6 else 0,
-                                     "interval": 0,}}],
+                                     "interval": 0,
+                                     }
+                       }
+                      ],
             
             "yAxis": {
                 "type": "value",
@@ -1544,9 +1547,9 @@ def make_multi_progress_bar(labels,values,colors,titre="",width=500,height=400):
         barmode="stack",
         width=width,height=height,
         annotations=[dict(text= str(round(100*values[i],2))+'%', x=100*values[i], y=i,
-            font_size=20, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))] + 
+            font_size=160/len(values) if len(values) > 5 else 30, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))] + 
         [dict(text= labels[i], x=-1, y=i+0.5,
-            font_size=25, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))],
+            font_size=160/len(values) if len(values) > 5 else 30, showarrow=False,xanchor='left',font=dict(color=colors[i], family="Berlin Sans FB")) for i in range(len(values))],
         xaxis=dict(visible=False), 
         yaxis=dict(visible=False),
         margin=dict(l=50, r=20, t=20, b=20),
