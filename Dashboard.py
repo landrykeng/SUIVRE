@@ -1596,6 +1596,7 @@ with tab_[5]:
         n = len(taux_realisation_district)
         palette = px.colors.qualitative.Plotly  # palette de base
         colors = [palette[i % len(palette)] for i in range(n)]
+        taux_realisation_district=taux_realisation_district.sort_values("Taux de réalisation", ascending=True)
         
         #make_multi_progress_bar_echart( labels=taux_realisation_district.index, values=taux_realisation_district["Taux de réalisation"], titre="Taux de réalisation par district", colors=colors,height="400px",width="100%")
         make_multi_progress_bar(labels=taux_realisation_district.index, values=taux_realisation_district["Taux de réalisation"],titre="Taux de réalisation par district",colors=colors, width=400, height=400)
