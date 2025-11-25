@@ -1552,6 +1552,7 @@ with tab_[5]:
     #initial_to_use["Nombre de chèque à saisir"]=initial_to_use["Nombre de chèque à saisir"].astype('Int64')
     nb_fosa_to_audit=echantillon.shape[0]
     fosa_edited=len(initial_to_use["FOSA"].unique())
+    progress=round(100*fosa_edited/nb_fosa_to_audit,2) 
     
     with kpi_col[0]:
         display_single_metric_advanced("Nombre FOSA à auditer",nb_fosa_to_audit, delta=0, color_scheme="green")
@@ -1560,7 +1561,7 @@ with tab_[5]:
         display_single_metric_advanced("Nombre de FOSA audité",fosa_edited, delta=0,color_scheme="red")
 
     with kpi_col[2]: 
-        display_single_metric_advanced("Taux de réalisation",round(100*fosa_edited/nb_fosa_to_audit,2), delta=0,color_scheme="orange", unit="%")
+        display_single_metric_advanced("Taux de réalisation",progress, delta=0,color_scheme="orange", unit="%")
 
     st.write("")
     
