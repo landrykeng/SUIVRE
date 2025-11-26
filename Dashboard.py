@@ -441,14 +441,16 @@ tab_=st.tabs(["**Indicateurs**",
 
 #==============ONGLET INDICATEURS==========================
 with tab_[0]:
+    data_rejet=st.session_state.df_rejet
+    data_synthese=st.session_state.df_synthese
     cf=st.columns(2)
     with cf[0]:
         fosa2=st.multiselect("Choisir le statut de la FOSA", options=["SONUB","SONUC"], default=["SONUB","SONUC"])
     with cf[1]:
         region2=st.multiselect("Choisir la (les) régions(s)", options=data_rejet["Région"].unique(), default=data_rejet["Région"].unique())
     
-    data_rejet=data_rejet[data_rejet["Région"].isin(region2)] if len(region2)!=0 else data_rejet
-    data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa2)] if len(fosa2)!=0 else data_rejet
+    #data_rejet=data_rejet[data_rejet["Région"].isin(region2)] if len(region2)!=0 else data_rejet
+    #data_rejet=data_rejet[data_rejet["Statut FOSA"].isin(fosa2)] if len(fosa2)!=0 else data_rejet
     
     montant=data_rejet.groupby("statut du chèque").agg({"Montant rejeté par le CM":"sum"}).reset_index()
     
